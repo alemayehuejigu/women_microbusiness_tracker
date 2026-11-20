@@ -25,7 +25,6 @@ main.py            starts the app
 frontend/          what the user sees: menus, questions and printed tables
 logic/             the rules: input checks, permissions, stock check, profit formulas
 data/              everything that talks to SQLite
-tests/             automatic tests
 ```
 
 The data always moves in one direction:
@@ -54,7 +53,6 @@ frontend (screen)  ->  logic (rules)  ->  data (SQL)  ->  tracker.db
 | `logic/shop_logic.py` | product rules (no double names, no delete if sold), sale rules (enough stock, helper sells for today only), expense rules, the profit formulas and the date ranges |
 | `data/database.py` | connection, table creation and the two query functions |
 | `data/queries.py` | all the SQL: roles and users, products, sales (stock and sale are saved together) and expenses |
-| `tests/test_app.py` | automatic tests |
 
 ## Database tables
 
@@ -99,14 +97,6 @@ Remaining stock = the stock number saved for each product
 Example: Soap costs 1,000 RWF and sells for 1,500 RWF. We start with 20 and sell 5.
 Revenue is 7,500 RWF and COGS is 5,000 RWF. With 500 RWF of expenses the net profit is 2,000 RWF
 and 15 soaps are left.
-
-## Tests
-
-```
-python tests/test_app.py
-```
-
-The tests use a temporary database, so they never touch your real `tracker.db`.
 
 ## Limits
 
