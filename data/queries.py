@@ -56,3 +56,61 @@ def update_pin(user_id, pin_hash):
 
 def delete_user(user_id):
     database.run_change("DELETE FROM users WHERE id = ?", (user_id,))
+
+
+# products
+
+def add_product(name, cost_price, selling_price, stock):
+    cursor = database.run_change(
+        "INSERT INTO products (name, cost_price, selling_price, stock) VALUES (?, ?, ?, ?)",
+        (name, cost_price, selling_price, stock),
+    )
+    return cursor.lastrowid
+
+
+def get_all_products():
+    return database.run_query("SELECT * FROM products ORDER BY name")
+
+
+def get_product_by_id(product_id):
+    rows = database.run_query("SELECT * FROM products WHERE id = ?", (product_id,))
+    if len(rows) == 0:
+        return None
+    return rows[0]
+
+
+def get_product_by_name(name):
+    rows = database.run_query("SELECT * FROM products WHERE name = ?", (name,))
+    if len(rows) == 0:
+        return None
+    return rows[0]
+
+
+def search_products(text):
+    return database.run_query(
+        "SELECT * FROM products WHERE name LIKE ? ORDER BY name",
+        ("%" + text + "%",),
+    )
+
+
+def update_product(product_id, name, cost_price, selling_price, stock):
+    database.run_change(
+        "UPDATE products SET name = ?, cost_price = ?, selling_price = ?, stock = ? WHERE id = ?",
+        (name, cost_price, selling_price, stock, product_id),
+    )
+
+
+def add_stock(product_id, quantity):
+    database.run_change(
+        "UPDATE products SET stock = stock + ? WHERE id = ?",
+        (quantity, product_id),
+    )
+
+
+def delete_product(product_id):
+    database.run_change("DELETE FROM products WHERE id = ?", (product_id,))
+
+
+def get_total_stock():
+    rows = database.run_query("SELECT COALESCE(SUM(stock), 0) AS total FROM products")
+    return rows[0]["total"]
