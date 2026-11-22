@@ -114,3 +114,78 @@ def delete_product(product_id):
 def get_total_stock():
     rows = database.run_query("SELECT COALESCE(SUM(stock), 0) AS total FROM products")
     return rows[0]["total"]
+
+
+
+
+
+
+# sales
+
+def add_sale(product_id, quantity, cost_price, selling_price, sale_date, user_id):
+    # two steps that must both work: lower the stock and save the sale
+    connection = database.connection
+    try:
+        cursor = connection.execute(
+            "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?",
+            (quantity, product_id, quantity),
+        )
+        if cursor.rowcount == 0:
+            connection.rollback()
+            raise ValueError("Not enough stock for this sale.")
+        cursor = connection.execute(
+            "INSERT INTO sales (product_id, quantity, cost_price, selling_price, sale_date, user_id) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (product_id, quantity, cost_price, selling_price, sale_date, user_id),
+        )
+        connection.commit()
+        return cursor.lastrowid
+    except sqlite3.Error:
+        connection.rollback()
+        raise ValueError("Could not save the sale. Please try again.")
+
+
+def cancel_sale(sale_id):
+    # put the stock back and remove the sale
+    connection = database.connection
+    try:
+        sale = connection.execute(
+            "SELECT product_id, quantity FROM sales WHERE id = ?", (sale_id,)
+        ).fetchone()
+        if sale is None:
+            raise ValueError("That sale was not found.")
+        connection.execute(
+            "UPDATE products SET stock = stock + ? WHERE id = ?",
+            (sale["quantity"], sale["product_id"]),
+        )
+        connection.execute("DELETE FROM sales WHERE id = ?", (sale_id,))
+        connection.commit()
+    except sqlite3.Error:
+        connection.rollback()
+        raise ValueError("Could not cancel the sale. Please try again.")
+
+
+def get_all_sales():
+    return database.run_query(
+        "SELECT sales.id, sales.sale_date, products.name AS product, sales.quantity, "
+        "sales.selling_price, sales.quantity * sales.selling_price AS total, "
+        "users.name AS sold_by "
+        "FROM sales "
+        "JOIN products ON sales.product_id = products.id "
+        "LEFT JOIN users ON sales.user_id = users.id "
+        "ORDER BY sales.sale_date DESC, sales.id DESC"
+    )
+
+
+def get_sale_by_id(sale_id):
+    rows = database.run_query("SELECT * FROM sales WHERE id = ?", (sale_id,))
+    if len(rows) == 0:
+        return None
+    return rows[0]
+
+
+def count_sales_for_product(product_id):
+    rows = database.run_query(
+        "SELECT COUNT(*) AS total FROM sales WHERE product_id = ?", (product_id,)
+    )
+    return rows[0]["total"]
