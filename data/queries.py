@@ -189,3 +189,27 @@ def count_sales_for_product(product_id):
         "SELECT COUNT(*) AS total FROM sales WHERE product_id = ?", (product_id,)
     )
     return rows[0]["total"]
+
+
+# dates are saved as text like 2026-10-28, so BETWEEN works on them
+def get_sale_totals(start_date, end_date):
+    rows = database.run_query(
+        "SELECT COALESCE(SUM(quantity * selling_price), 0) AS revenue, "
+        "COALESCE(SUM(quantity * cost_price), 0) AS cogs, "
+        "COALESCE(SUM(quantity), 0) AS units "
+        "FROM sales WHERE sale_date BETWEEN ? AND ?",
+        (start_date, end_date),
+    )
+    return rows[0]
+
+
+def get_sale_totals_by_product(start_date, end_date):
+    return database.run_query(
+        "SELECT products.name AS product, SUM(sales.quantity) AS units, "
+        "SUM(sales.quantity * sales.selling_price) AS revenue, "
+        "SUM(sales.quantity * sales.cost_price) AS cogs "
+        "FROM sales JOIN products ON sales.product_id = products.id "
+        "WHERE sales.sale_date BETWEEN ? AND ? "
+        "GROUP BY products.id",
+        (start_date, end_date),
+    )
