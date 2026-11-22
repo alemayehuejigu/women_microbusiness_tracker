@@ -49,3 +49,10 @@ def add_user(name, pin_hash, role_name):
         (name, pin_hash, role_name),
     )
     return cursor.lastrowid
+
+def update_pin(user_id, pin_hash):
+    database.run_change("UPDATE users SET pin_hash = ? WHERE id = ?", (pin_hash, user_id))
+
+
+def delete_user(user_id):
+    database.run_change("DELETE FROM users WHERE id = ?", (user_id,))
