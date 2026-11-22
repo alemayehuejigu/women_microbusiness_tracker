@@ -20,3 +20,13 @@ def get_user_by_name(name):
         return None
     return rows[0]
 
+def get_user_by_id(user_id):
+    rows = database.run_query(
+        "SELECT users.id, users.name, roles.name AS role "
+        "FROM users JOIN roles ON users.role_id = roles.id "
+        "WHERE users.id = ?",
+        (user_id,),
+    )
+    if len(rows) == 0:
+        return None
+    return rows[0]
