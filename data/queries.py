@@ -30,3 +30,22 @@ def get_user_by_id(user_id):
     if len(rows) == 0:
         return None
     return rows[0]
+
+
+
+
+def get_all_users():
+    return database.run_query(
+        "SELECT users.id, users.name, roles.name AS role "
+        "FROM users JOIN roles ON users.role_id = roles.id "
+        "ORDER BY users.name"
+    )
+
+
+def add_user(name, pin_hash, role_name):
+    cursor = database.run_change(
+        "INSERT INTO users (name, pin_hash, role_id) "
+        "VALUES (?, ?, (SELECT id FROM roles WHERE name = ?))",
+        (name, pin_hash, role_name),
+    )
+    return cursor.lastrowid
