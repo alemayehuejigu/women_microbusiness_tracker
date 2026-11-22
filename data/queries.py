@@ -213,3 +213,49 @@ def get_sale_totals_by_product(start_date, end_date):
         "GROUP BY products.id",
         (start_date, end_date),
     )
+
+
+# expenses
+
+def add_expense(description, amount, expense_date, user_id):
+    cursor = database.run_change(
+        "INSERT INTO expenses (description, amount, expense_date, user_id) VALUES (?, ?, ?, ?)",
+        (description, amount, expense_date, user_id),
+    )
+    return cursor.lastrowid
+
+
+def get_all_expenses():
+    return database.run_query(
+        "SELECT expenses.id, expenses.expense_date, expenses.description, expenses.amount, "
+        "users.name AS added_by "
+        "FROM expenses LEFT JOIN users ON expenses.user_id = users.id "
+        "ORDER BY expenses.expense_date DESC, expenses.id DESC"
+    )
+
+
+def get_expense_by_id(expense_id):
+    rows = database.run_query("SELECT * FROM expenses WHERE id = ?", (expense_id,))
+    if len(rows) == 0:
+        return None
+    return rows[0]
+
+
+def update_expense(expense_id, description, amount, expense_date):
+    database.run_change(
+        "UPDATE expenses SET description = ?, amount = ?, expense_date = ? WHERE id = ?",
+        (description, amount, expense_date, expense_id),
+    )
+
+
+def delete_expense(expense_id):
+    database.run_change("DELETE FROM expenses WHERE id = ?", (expense_id,))
+
+
+def get_expense_total(start_date, end_date):
+    rows = database.run_query(
+        "SELECT COALESCE(SUM(amount), 0) AS total FROM expenses "
+        "WHERE expense_date BETWEEN ? AND ?",
+        (start_date, end_date),
+    )
+    return rows[0]["total"]
