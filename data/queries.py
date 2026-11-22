@@ -32,8 +32,6 @@ def get_user_by_id(user_id):
     return rows[0]
 
 
-
-
 def get_all_users():
     return database.run_query(
         "SELECT users.id, users.name, roles.name AS role "
@@ -114,11 +112,6 @@ def delete_product(product_id):
 def get_total_stock():
     rows = database.run_query("SELECT COALESCE(SUM(stock), 0) AS total FROM products")
     return rows[0]["total"]
-
-
-
-
-
 
 # sales
 
